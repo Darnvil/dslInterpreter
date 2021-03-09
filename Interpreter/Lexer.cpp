@@ -1,5 +1,7 @@
 #include "Lexer.h"
 
+int Lexer::Lexer::line = 0;
+
 Lexer::Lexer * Lexer::Lexer::lexer;
 
 const std::vector<Lexer::Terminal> Lexer::Lexer::TERMINALS = {
@@ -7,7 +9,6 @@ const std::vector<Lexer::Terminal> Lexer::Lexer::TERMINALS = {
 			Terminal("ASSIGN_OP", "="),
 			Terminal("NUMBER", "0|[1-9][0-9]*"),
 			Terminal("IF_KW", "if", 1),
-			Terminal("WS", "\\s+"),
 			Terminal("OP", "\\+|\\-|\\*|\\/"),
 			Terminal("L_BR", "\\("),
 			Terminal("R_BR", "\\)"),
@@ -32,6 +33,11 @@ void Lexer::Lexer::Run(std::vector<std::string> args)
 		std::string input = args[i];
 		while (input != "")
 		{
+			while (input.at(0) == ' ' || input.at(0) == '\t' || input.at(0) == '\n')
+			{
+				input = input.substr(1, input.length());
+			}
+
 			Token token = ExtractNextToken(input);
 			tokens.push_back(token);
 
@@ -42,9 +48,46 @@ void Lexer::Lexer::Run(std::vector<std::string> args)
 	PrintTokens(tokens);
 }
 
+void Lexer::Lexer::RunFile(std::ifstream & file)
+{
+	std::string buffer;
+	std::vector<std::string> lines;
+	while (!file.eof())
+	{
+		std::getline(file, buffer);
+		lines.push_back(buffer);
+	}
+	file.close();
+
+	std::vector<Token> tokens;
+	for (size_t i = 0; i < lines.size(); ++i)
+	{
+		std::string input = lines[i];
+		while (input != "")
+		{
+			while (input.at(0) == ' ' || input.at(0) == '\t' || input.at(0) == '\n')
+			{
+				if (input.at(0) == '\n')
+					line += 1;
+				input = input.substr(1, input.length());
+			}
+
+			Token token = ExtractNextToken(input);
+			tokens.push_back(token);
+
+			input = input.substr(token.GetValue().length(), input.length());
+		}
+		line++;
+	}
+
+	PrintTokens(tokens);
+
+}
+
 Lexer::Token Lexer::Lexer::ExtractNextToken(std::string input)
 {
 	std::string buffer;
+	
 	buffer.push_back(input.at(0));
 	try {
 		if (AnyTerminalMatches(buffer))
@@ -62,7 +105,10 @@ Lexer::Token Lexer::Lexer::ExtractNextToken(std::string input)
 			return Token(GetPrioritizedTerminal(terminals), buffer);
 		}
 		else
-			throw std::runtime_error("Unexpected symbol");
+		{
+			std::string err = "Unexpected symbol at line " + std::to_string(line);
+			throw std::runtime_error(err);
+		}
 	}
 	catch(std::runtime_error& e)
 	{
