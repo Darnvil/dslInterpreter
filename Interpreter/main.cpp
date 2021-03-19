@@ -16,7 +16,8 @@ int main(int argc, char * argv[])
 	}
 
 	std::vector<std::string> arguments(argv, argv + argc);
-
+	Lexer::Lexer lexer;
+	
 	if (arguments[1] == "-f")
 	{
 		std::ifstream code;
@@ -27,11 +28,11 @@ int main(int argc, char * argv[])
 			return -10;
 		}
 
-		Lexer::Lexer::GetInstance()->RunFile(code);
+		lexer.RunFile(code);
 	}
 	else
 	{
-		Lexer::Lexer::GetInstance()->Run(arguments);
+		lexer.Run(arguments);
 	}
 	
 	

@@ -5,8 +5,6 @@
 
 #include <vector>
 #include <string>
-#include <iostream>
-#include <fstream>
 #include "Terminal.h"
 #include "Token.h"
 
@@ -15,22 +13,35 @@ namespace Lexer
 	class Lexer
 	{
 	public:
-		static const std::vector<Terminal> TERMINALS;
+		const std::vector<Terminal> TERMINALS = {
+			Terminal("VAR", "[a-zA-Z]+"),
+			Terminal("ASSIGN_OP", "="),
+			Terminal("NUMBER", "0|[1-9][0-9]*"),
+			Terminal("IF_KW", "if", 1),
+			Terminal("ELSE_KW", "else", 1),
+			Terminal("FOR_KW", "for", 1),
+			Terminal("OP", "\\+|\\-|\\*|\\/"),
+			Terminal("L_BR", "\\("),
+			Terminal("R_BR", "\\)"),
+			Terminal("L_S_BR", "\\{"),
+			Terminal("R_S_BR", "\\}"),
+			Terminal("LOGICAL_OP", ">|<|<=|>=|!=*|==", 2),
+			Terminal("SEMICOLON", ";")
+};
 		
-		static Lexer* GetInstance();
-		static void Run(std::vector<std::string> args);
-		static void RunFile(std::ifstream& file);
+		
+		void Run(std::vector<std::string> args);
+		void RunFile(std::ifstream& file);
 	private:
-		static Token ExtractNextToken(std::string input);
-		static bool AnyTerminalMatches(std::string str);
-		static std::vector<Terminal> LookupTerminals(std::string str);
-		static Terminal GetPrioritizedTerminal(std::vector<Terminal> terminals);
+		Token ExtractNextToken(std::string input);
+		bool AnyTerminalMatches(std::string str);
+		std::vector<Terminal> LookupTerminals(std::string str);
+		Terminal GetPrioritizedTerminal(std::vector<Terminal> terminals);
 
-		static void PrintTokens(std::vector<Token> tokens);
+		void PrintTokens(std::vector<Token> tokens);
 
-		static int line;
+		int line;
 
-		static Lexer * lexer;
 	};
 }
 #endif

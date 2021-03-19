@@ -1,32 +1,11 @@
 #include "Lexer.h"
-
-int Lexer::Lexer::line = 0;
-
-Lexer::Lexer * Lexer::Lexer::lexer;
-
-const std::vector<Lexer::Terminal> Lexer::Lexer::TERMINALS = {
-			Terminal("VAR", "[a-zA-Z]+"),
-			Terminal("ASSIGN_OP", "="),
-			Terminal("NUMBER", "0|[1-9][0-9]*"),
-			Terminal("IF_KW", "if", 1),
-			Terminal("OP", "\\+|\\-|\\*|\\/"),
-			Terminal("L_BR", "\\("),
-			Terminal("R_BR", "\\)"),
-			Terminal("L_S_BR", "\\{"),
-			Terminal("R_S_BR", "\\}"),
-			Terminal("LOGICAL_OP", ">|<")
-};
+#include <fstream>
 
 
-Lexer::Lexer* Lexer::Lexer::GetInstance()
-{
-	if (lexer == nullptr)
-		lexer = new Lexer();
-	return lexer;
-}
 
 void Lexer::Lexer::Run(std::vector<std::string> args)
 {
+	line = 0;
 	std::vector<Token> tokens;
 	for (size_t i = 1; i < args.size(); ++i)
 	{
@@ -50,6 +29,7 @@ void Lexer::Lexer::Run(std::vector<std::string> args)
 
 void Lexer::Lexer::RunFile(std::ifstream & file)
 {
+	line = 0;
 	std::string buffer;
 	std::vector<std::string> lines;
 	while (!file.eof())
