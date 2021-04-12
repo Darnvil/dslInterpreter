@@ -3,9 +3,10 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
+#include <string>
 #include "Terminal.h"
 
-namespace Lexer
+namespace interpreter
 {
     class Token
     {
@@ -21,9 +22,16 @@ namespace Lexer
             return "[" + terminal.GetIdentifier() + ", " + value + "]";
         }
 
+        bool operator<(const Token& rhs) const noexcept
+        {
+            return this->value < rhs.value;
+        }
+    	
         Terminal GetTerminal();
         std::string GetValue();
     };
+
+	
 }
 #endif
 

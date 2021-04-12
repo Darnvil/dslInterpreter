@@ -7,7 +7,7 @@
 #include <string>
 #include <regex>
 
-namespace Lexer
+namespace interpreter
 {
 
     class Terminal

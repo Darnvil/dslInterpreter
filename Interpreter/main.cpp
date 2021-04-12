@@ -5,6 +5,7 @@
 #include <string>
 #include <fstream>
 #include "Lexer.h"
+#include "Parser.h"
 
 
 int main(int argc, char * argv[])
@@ -16,7 +17,7 @@ int main(int argc, char * argv[])
 	}
 
 	std::vector<std::string> arguments(argv, argv + argc);
-	Lexer::Lexer lexer;
+	interpreter::Lexer lexer;
 	
 	if (arguments[1] == "-f")
 	{
@@ -34,7 +35,9 @@ int main(int argc, char * argv[])
 	{
 		lexer.Run(arguments);
 	}
-	
+
+	interpreter::Parser parser;
+	parser.Parse(lexer);
 	
 	return 0;
 }

@@ -1,16 +1,20 @@
 #include "Terminal.h"
 
-std::string Lexer::Terminal::GetIdentifier()
+namespace interpreter
 {
-	return identifier;
-}
 
-int Lexer::Terminal::GetPriority()
-{
-	return priority;
-}
+	std::string Terminal::GetIdentifier()
+	{
+		return identifier;
+	}
 
-bool Lexer::Terminal::Matches(std::string str)
-{
-	return std::regex_match(str, pattern);
+	int Terminal::GetPriority()
+	{
+		return priority;
+	}
+
+	bool Terminal::Matches(std::string str)
+	{
+		return std::regex_match(str, pattern);
+	}
 }

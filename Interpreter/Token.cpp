@@ -1,12 +1,15 @@
 #include "Token.h"
 
 
-Lexer::Terminal Lexer::Token::GetTerminal()
+namespace interpreter
 {
-    return terminal;
-}
+	Terminal Token::GetTerminal()
+	{
+	    return terminal;
+	}
 
-std::string Lexer::Token::GetValue()
-{
-    return value;
+	std::string Token::GetValue()
+	{
+	    return value;
+	}
 }

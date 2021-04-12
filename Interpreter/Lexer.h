@@ -8,27 +8,31 @@
 #include "Terminal.h"
 #include "Token.h"
 
-namespace Lexer
+namespace interpreter
 {
 	class Lexer
 	{
 	public:
 		const std::vector<Terminal> TERMINALS = {
-			Terminal("VAR", "[a-zA-Z]+"),
+			Terminal("VAR", "[a-zA-Z][a-zA-Z1-9_]*"),
 			Terminal("ASSIGN_OP", "="),
-			Terminal("NUMBER", "0|[1-9][0-9]*"),
+			Terminal("NUMBER", R"([0-9]*)"), //(\.[0-9]*)?(E[\+\-][0-9]*)?
+			Terminal("TYPE", "int|float", 1),
 			Terminal("IF_KW", "if", 1),
 			Terminal("ELSE_KW", "else", 1),
 			Terminal("FOR_KW", "for", 1),
-			Terminal("OP", "\\+|\\-|\\*|\\/"),
+			Terminal("OP", R"(\+|\-|\*|\/)"),
 			Terminal("L_BR", "\\("),
 			Terminal("R_BR", "\\)"),
 			Terminal("L_S_BR", "\\{"),
 			Terminal("R_S_BR", "\\}"),
-			Terminal("LOGICAL_OP", ">|<|<=|>=|!=*|==", 2),
-			Terminal("SEMICOLON", ";")
+			Terminal("LOGICAL_OP", ">|<|<=|>=|<>|==", 2),
+			Terminal("SEMICOLON", ";"),
+			Terminal("WS", "[\\t\\r ]+"),
+			Terminal("NLINE", "\\n", 1)
 };
-		
+
+		std::vector<Token> tokens;
 		
 		void Run(std::vector<std::string> args);
 		void RunFile(std::ifstream& file);
