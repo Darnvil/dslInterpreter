@@ -47,61 +47,74 @@ namespace interpreter
 	
 	void Parser::lang()
 	{
-		checkExpr();
+		Token tok = Token(Terminal("lang", ""), "lang");
+		node = new Node(0, "lang");
+		
+		checkExpr(node);
 		if(currentToken->GetTerminal().GetIdentifier() != "EOF")
 		{
 			err("Expected end of file, but met: " + currentToken->GetTerminal().GetIdentifier());
 		}
 	}
 
-	void Parser::expr()
+	Node * Parser::expr()
 	{
+		Node * exprn = new Node(line, "expr");
 		auto firstSet = firstSets.at("expr");
 		const std::string id = *std::find(firstSet.begin(), firstSet.end(), currentToken->GetTerminal().GetIdentifier());
 		if (id == "TYPE")
 		{
-			var_declaration();
+			exprn->AddChild(var_declaration());
 		}
 		else if (id == "VAR")
 		{
-			assign();
+			exprn->AddChild(assign());
 		}
 		else if (id == "IF_KW")
 		{
-			if_expr();
+			exprn->AddChild(if_expr());
 		}
 		else if (id == "FOR_KW")
 		{
-			for_expr();
+			exprn->AddChild(for_expr());
 		}
 		else
 		{
 			err("Unexpected token: " + currentToken->GetTerminal().GetIdentifier());
 		}
+		return exprn;
+	}
+
+	Node * Parser::assign(bool semicol)
+	{
+		Node * assignn = new Node(line, "assign");
+		Node* var = new Leaf(line, Match("VAR"), currentToken->GetValue());
+		assignn->AddChild((Node*)var);
+		Node* assign_op = new Leaf(line, Match("ASSIGN_OP"), currentToken->GetValue());
+		assignn->AddChild((Node*)assign_op);
 		
+		assignn->AddChild(value_expr());
+		if (semicol)
+		{
+			Leaf* semicolon = new Leaf(line, Match("SEMICOLON"), currentToken->GetValue());
+			assignn->AddChild((Node *)semicolon);
+		}
+		return assignn;
 	}
 
-	void Parser::assign(bool semicol)
+	Node * Parser::value_expr()
 	{
-		Match("VAR");
-		Match("ASSIGN_OP");
-		value_expr();
-		if(semicol)
-			Match("SEMICOLON");
-	}
-
-	void Parser::value_expr()
-	{
+		Node* value_exprn = new Node(line, "value_expr");
 		auto firstSet = firstSets.at("value_expr");
 		IgnoreWhitespaces();
 		const std::string id = *std::find(firstSet.begin(), firstSet.end(), currentToken->GetTerminal().GetIdentifier());
 		if(id == "L_BR")
 		{
-			value_expr_wbr();
+			value_exprn->AddChild(value_expr_wbr());
 		}
 		else if(id == "VAR" || id == "NUMBER")
 		{
-			value();
+			value_exprn->AddChild(value());
 		}
 		else
 		{
@@ -109,178 +122,264 @@ namespace interpreter
 		}
 		if (currentToken->GetTerminal().GetIdentifier() == "OP")
 		{
-			Match("OP");
-			value_expr();
+			Leaf* op = new Leaf(line, Match("OP"), currentToken->GetValue());
+			value_exprn->AddChild((Node *)op);
+			value_exprn->AddChild(value_expr());
 		}
-		
+		return value_exprn;
 	}
 
-	void Parser::value_expr_wbr()
+	Node * Parser::value_expr_wbr()
 	{
-		Match("L_BR");
-		value_expr();
-		Match("R_BR");
-		
+		Node * val_expr_wbr = new Node(line, "value_expr_wbr");
+		Leaf* l_br = new Leaf(line, Match("L_BR"), currentToken->GetValue());
+		val_expr_wbr->AddChild((Node *)l_br);
+		val_expr_wbr->AddChild(value_expr());
+		Leaf* r_br = new Leaf(line, Match("R_BR"), currentToken->GetValue());
+		val_expr_wbr->AddChild((Node *)r_br);
+		return val_expr_wbr;		
 	}
 
-	void Parser::value()
+	Node * Parser::value()
 	{
+		Node * value = new Node(line, "value");
 		try
 		{
-			Match("NUMBER");
+			Leaf* number = new Leaf(line, Match("NUMBER"), currentToken->GetValue());
+			value->AddChild((Node *)number);
+			return value;
 		}
 		catch (std::exception e)
 		{
-			
-			Match(("VAR"));
+			Leaf* var = new Leaf(line, Match("VAR"), currentToken->GetValue());
+			value->AddChild((Node *)var);
+			return value;
 		}
 	}
 
 	
-	void Parser::var_declaration()
+	Node * Parser::var_declaration()
 	{
-		Match("TYPE");
+		Node * var_declarationn = new Node(line, "var_declaration");
+		Leaf* type = new Leaf(line, Match("TYPE"), currentToken->GetValue());
+		var_declarationn->AddChild((Node *)type);
 		if((currentToken + 2)->GetTerminal().GetIdentifier() == "ASSIGN_OP")
 		{
-			assign();
+			var_declarationn->AddChild(assign());
 		}
 		else
 		{
-			Match("VAR");
-			Match("SEMICOLON");
+			Leaf * var = new Leaf(line, Match("VAR"), currentToken->GetValue());
+			var_declarationn->AddChild((Node *)var);
+			Leaf * semicolon = new Leaf(line, Match("SEMICOLON"), currentToken->GetValue());
+			var_declarationn->AddChild((Node *)semicolon);
 		}
+		return var_declarationn;
 	}
 
-	void Parser::for_expr()
+	Node * Parser::for_expr()
 	{
-		for_head();
-		for_body();
+		Node * for_exprn = new Node(line, "for_expr");
+		
+		for_exprn->AddChild(for_head());
+		for_exprn->AddChild(for_body());
+		
+		return for_exprn;
 	}
 
-	void Parser::for_head()
+	Node * Parser::for_head()
 	{
-		Match("FOR_KW");
-		Match("L_BR");
-		for_init();
-		Match("R_BR");
+		Node * for_headn = new Node(line, "for_head");
+		
+		Leaf* for_kw = new Leaf(line, Match("FOR_KW"), currentToken->GetValue());
+		for_headn->AddChild((Node *)for_kw);
+		
+		Leaf* l_br = new Leaf(line, Match("L_BR"), currentToken->GetValue());
+		for_headn->AddChild((Node *)l_br);
+		
+		for_headn->AddChild(for_init());
+		
+		Leaf* r_br = new Leaf(line, Match("R_BR"), currentToken->GetValue());
+		for_headn->AddChild((Node *)r_br);
+		
+		return for_headn;
 	}
 
-	void Parser::for_init()
+	Node * Parser::for_init()
 	{
+		Node * for_initn = new Node(line, "for_init");
 		if (currentToken->GetTerminal().GetIdentifier() == "SEMICOLON")
 		{
-			Match("SEMICOLON");
+			Leaf* semicolon = new Leaf(line, Match("SEMICOLON"), currentToken->GetValue());
+			for_initn->AddChild((Node *)semicolon);
 		}
 		else if(currentToken->GetTerminal().GetIdentifier() == "TYPE")
 		{
-			var_declaration();
+			for_initn->AddChild(var_declaration());
 		}
 		else
 		{
-			value_expr();
+			for_initn->AddChild(value_expr());
 		}
 		
 
-		if(currentToken->GetTerminal().GetIdentifier() == "SEMICOLON")
+		if(currentToken->GetTerminal().GetIdentifier() != "SEMICOLON")
 		{
-			
+			for_initn->AddChild(logical_expr());
 		}
-		else
-		{
-			logical_expr();
-		}
-		Match("SEMICOLON");
+		Leaf* semicolon = new Leaf(line, Match("SEMICOLON"), currentToken->GetValue());
+		for_initn->AddChild((Node *)semicolon);
 
 		if(currentToken->GetTerminal().GetIdentifier() == "R_BR")
 		{
-			return;
+			return for_initn;
 		}
-		assign(false);
+		for_initn->AddChild(assign(false));
 		
+		return for_initn;
 	}
 
-	void Parser::for_body()
+	Node * Parser::for_body()
 	{
-		Match("L_S_BR");
-		checkExpr();
-		Match("R_S_BR");
+		Node * for_bodyn = new Node(line, "for_body");
+		
+		Leaf* l_s_br = new Leaf(line, Match("L_S_BR"), currentToken->GetValue());
+		for_bodyn->AddChild((Node *)l_s_br);
+		
+		checkExpr(for_bodyn);
+		
+		Leaf* r_s_br = new Leaf(line, Match("R_S_BR"), currentToken->GetValue());
+		for_bodyn->AddChild((Node *)r_s_br);
+		
+		return for_bodyn;
 	}
 
-	void Parser::if_expr()
+	Node * Parser::if_expr()
 	{
-		if_head();
-		if_body();
+		Node * if_exprn = new Node(line, "if_expr");
+		
+		if_exprn->AddChild(if_head());
+		if_exprn->AddChild(if_body());
+		
 		if (currentToken->GetTerminal().GetIdentifier() == "ELSE_KW")
 		{
-			else_expr();
+			if_exprn->AddChild(else_expr());
 		}
+		
+		return if_exprn;
 	}
 
 	
-	void Parser::if_head()
+	Node * Parser::if_head()
 	{
-		Match("IF_KW");
-		if_condition();
+		Node * if_headn = new Node(line, "if_head");
+	
+		Leaf* if_kw = new Leaf(line, Match("IF_KW"), currentToken->GetValue());
+		if_headn->AddChild((Node *)if_kw);
+		
+		if_headn->AddChild(if_condition());
+
+		return if_headn;
 	}
 
-	void Parser::if_condition()
+	Node * Parser::if_condition()
 	{
-		Match("L_BR");
-		logical_expr();
-		Match("R_BR");
+		Node * if_conditionn = new Node(line, "if_condition");
+		
+		Leaf* l_br = new Leaf(line, Match("L_BR"), currentToken->GetValue());
+		if_conditionn->AddChild((Node *)l_br);
+		
+		if_conditionn->AddChild(logical_expr());
+		
+		Leaf* r_br = new Leaf(line, Match("R_BR"), currentToken->GetValue());
+		if_conditionn->AddChild((Node *)r_br);
+
+		return if_conditionn;
 	}
 
-	void Parser::if_body()
+	Node * Parser::if_body()
 	{
-		Match("L_S_BR");
-		checkExpr();
-		Match("R_S_BR");
+		Node * if_bodyn = new Node(line, "if_body");
+		
+		Leaf* l_s_br = new Leaf(line, Match("L_S_BR"), currentToken->GetValue());
+		if_bodyn->AddChild((Node *)l_s_br);
+		
+		checkExpr(if_bodyn);
+
+		Leaf* r_s_br = new Leaf(line, Match("R_S_BR"), currentToken->GetValue());
+		if_bodyn->AddChild((Node *)r_s_br);
+
+		return if_bodyn;
 	}
 
-	void Parser::else_expr()
+	Node * Parser::else_expr()
 	{
-		else_head();
-		else_body();
+		Node * else_exprn = new Node(line, "else_expr");
+		
+		else_exprn->AddChild(else_head());
+		else_exprn->AddChild(else_body());
+		
+		return else_exprn;
 	}
 
-	void Parser::else_head()
+	Node * Parser::else_head()
 	{
-		Match("ELSE_KW");
+		Node * else_headn = new Node(line, "else_head");
+		
+		Leaf* else_kw = new Leaf(line, Match("ELSE_KW"), currentToken->GetValue());
+		else_headn->AddChild((Node *)else_kw);
+		
+		return else_headn;
 	}
 
-	void Parser::else_body()
+	Node * Parser::else_body()
 	{
-		Match("L_S_BR");
-		checkExpr();
-		Match("R_S_BR");
+		Node * else_bodyn = new Node(line, "else_body");
+		
+		Leaf* l_s_br = new Leaf(line, Match("L_S_BR"), currentToken->GetValue());
+		else_bodyn->AddChild((Node *)l_s_br);
+		
+		checkExpr(else_bodyn);
+		
+		Leaf* r_s_br = new Leaf(line, Match("R_S_BR"), currentToken->GetValue());
+		else_bodyn->AddChild((Node *)r_s_br);
+
+		return else_bodyn;
 	}
 
-	void Parser::logical_expr()
+	Node * Parser::logical_expr()
 	{
-		value_expr();
-		Match("LOGICAL_OP");
-		value_expr();
+		Node * logical_exprn = new Node(line, "logical_expr");
+		
+		logical_exprn->AddChild(value_expr());
+		
+		Leaf* logical_op = new Leaf(line, Match("LOGICAL_OP"), currentToken->GetValue());
+		logical_exprn->AddChild((Node *)logical_op);
+		
+		logical_exprn->AddChild(value_expr());
+
+		return logical_exprn;
 	}
 
 
 
-	void Parser::checkExpr()
+	void Parser::checkExpr(Node * parent)
 	{
 		std::vector<std::string> firstSet = firstSets.at("expr");
 		do
 		{
-			expr();
+			parent->AddChild(expr());
 		} while (std::find(firstSet.begin(), firstSet.end(), currentToken->GetTerminal().GetIdentifier()) != firstSet.end());
 	}
 	
-	void Parser::Match(std::string t)
+	std::string Parser::Match(std::string t)
 	{
 		IgnoreWhitespaces();
 		
 		if((currentToken++)->GetTerminal().GetIdentifier() == t)
 		{
 			IgnoreWhitespaces();
-			return;
+			return t;
 		}
 		--currentToken;
 		err("Unexpected token: " + currentToken->GetTerminal().GetIdentifier());
@@ -301,15 +400,16 @@ namespace interpreter
 		throw std::runtime_error(message ); //+ " at line " + std::to_string(line)
 	}
 
-	
 	void Parser::Parse(Lexer lexer)
 	{
 		try
 		{
 			currentToken = lexer.tokens.begin();
 			endToken = lexer.tokens.end();
+			
 			lang();
 			std::cout << "Parser: success\n";
+			node->Print(node, 0);
 		}
 		catch (std::exception exc)
 		{
@@ -317,12 +417,4 @@ namespace interpreter
 			exit(-2);
 		}
 	}
-
-
-	
-	
-	
-
-	
 }
-

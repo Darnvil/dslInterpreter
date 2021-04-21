@@ -133,6 +133,7 @@ namespace interpreter
 	void Lexer::PrintTokens(std::vector<Token> tokens)
 	{
 		std::cout << "Lexer: success\n\nTokens:\n";
+		
 		for (auto& token : tokens)
 		{
 			std::cout << token.ToString() << "\n";

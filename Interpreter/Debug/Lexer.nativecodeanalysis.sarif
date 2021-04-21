@@ -1,0 +1,115 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://schemastore.azurewebsites.net/schemas/json/sarif-2.1.0-rtm.5.json",
+  "runs": [
+    {
+      "results": [],
+      "tool": {
+        "driver": {
+          "name": "PREfast",
+          "fullName": "PREfast Code Analysis",
+          "version": "14.28.29913.0",
+          "informationUri": "https://aka.ms/cpp/ca"
+        }
+      },
+      "invocations": [
+        {
+          "commandLine": "\"C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.28.29910\\bin\\HostX86\\x86\\c1xx.dll\" -ACf{1F7B090C-16DB-4822-966A-A93D26ED4681} -ACpmspft140.dll -Alint -D_PREFAST_ -D_AST_FE_ -Analyze -zm0x0063B1C0 -il C:\\Users\\Kolba\\AppData\\Local\\Temp\\_CL_d0246e2fast -typedil -f Lexer.cpp -Ze -D_MSC_EXTENSIONS -Zp8 -Gs -pc \\:/ -D_MSC_VER=1928 -D_MSC_FULL_VER=192829913 -D_MSC_BUILD=0 -D_WIN32 -D_M_IX86=600 -D_M_IX86_FP=2 -GR -D_CPPRTTI -I C:\\GITS\\vcpkg\\installed\\x86-windows\\include -nologo -W 3 -diagnostics:column -D_GUARDOVERFLOW_CRT_ALLOCATORS=1 -Ot -DCODE_ANALYSIS -DWIN32 -D_DEBUG -D_CONSOLE -D_UNICODE -DUNICODE -EHs -D_CPPUNWIND -EHc -D__MSVC_RUNTIME_CHECKS -RTCs -RTCu -MDd -D_DEBUG -D_MT -D_DLL -GS -D_M_FP_PRECISE -permissive- -Zc:wchar_t -Zc:forScope -FoDebug\\Lexer.obj -FdDebug\\vc142.pdb -Gd -analyze:projectdirectory C:\\Users\\Kolba\\source\\repos\\Interpreter\\Interpreter -analyze:rulesetdirectory ;C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\Team Tools\\Static Analysis Tools\\\\Rule Sets; -analyze:ruleset C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\Team Tools\\Static Analysis Tools\\Rule Sets\\NativeRecommendedRules.ruleset -analyze:quiet -analyze:plugin C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.28.29910\\bin\\HostX86\\x86\\EspXEngine.dll -FC -errorreport:prompt -I C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.28.29910\\include -I C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.28.29910\\atlmfc\\include -I C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Auxiliary\\VS\\include -I C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.17763.0\\ucrt -I C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.17763.0\\um -I C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.17763.0\\shared -I C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.17763.0\\winrt -I C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.17763.0\\cppwinrt -I C:\\Program Files (x86)\\Windows Kits\\NETFXSDK\\4.8\\Include\\um",
+          "executionSuccessful": true
+        }
+      ],
+      "artifacts": [
+        {
+          "location": {
+            "uri": "file:///c:/users/kolba/source/repos/interpreter/interpreter/token.cpp"
+          },
+          "roles": [
+            "analysisTarget"
+          ],
+          "hashes": {
+            "md5": "18c7ee6b6f5e798dcfcfc05abb22e4da"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/users/kolba/source/repos/interpreter/interpreter/token.h"
+          },
+          "hashes": {
+            "md5": "a3500e2925d520d717bcff280cd87cc5"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/users/kolba/source/repos/interpreter/interpreter/terminal.h"
+          },
+          "hashes": {
+            "md5": "4653eb19c3c28db81bcb18f02f1119d1"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/users/kolba/source/repos/interpreter/interpreter/terminal.cpp"
+          },
+          "roles": [
+            "analysisTarget"
+          ],
+          "hashes": {
+            "md5": "698d2e3345c881e439d36a84504c54aa"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/users/kolba/source/repos/interpreter/interpreter/parser.cpp"
+          },
+          "roles": [
+            "analysisTarget"
+          ],
+          "hashes": {
+            "md5": "fc293496eacfeec1dce550b61ad65aec"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/users/kolba/source/repos/interpreter/interpreter/parser.h"
+          },
+          "hashes": {
+            "md5": "c7d004ab72600d94347eb79cf21a96ef"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/users/kolba/source/repos/interpreter/interpreter/lexer.h"
+          },
+          "roles": [
+            "resultFile"
+          ],
+          "hashes": {
+            "md5": "f1834371f7db4e0fe126e742362e4fdc"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/users/kolba/source/repos/interpreter/interpreter/main.cpp"
+          },
+          "roles": [
+            "analysisTarget"
+          ],
+          "hashes": {
+            "md5": "589f75929c719d794d6b6f966ada5f19"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///c:/users/kolba/source/repos/interpreter/interpreter/lexer.cpp"
+          },
+          "roles": [
+            "analysisTarget"
+          ],
+          "hashes": {
+            "md5": "9a0b22eaa5c7105abfa3289f70c1a55b"
+          }
+        }
+      ]
+    }
+  ]
+}

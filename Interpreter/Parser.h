@@ -8,6 +8,7 @@
 #include "Token.h"
 #include "VarTable.h"
 #include "Lexer.h"
+#include "Node.h"
 
 namespace interpreter
 {
@@ -19,6 +20,8 @@ namespace interpreter
 		int line;
 
 		VarTable top;
+
+		Node * node;
 		
 		std::map<std::string, std::vector<std::string> > firstSets = {
 			{"expr", {"TYPE", "VAR", "IF_KW", "FOR_KW", "$"}},
@@ -26,39 +29,44 @@ namespace interpreter
 		};
 
 		void lang();
-		void expr();
-		void var_declaration();
-		void assign(bool semicol = true);
-		void value_expr();
-		void value_expr_wbr();
-		void for_expr();
-		void for_head();
-		void for_init();
-		void for_body();
-		void if_expr();
-		void if_head();
-		void if_condition();
-		void if_body();
-		void else_expr();
-		void else_head();
-		void else_body();
-		void value();
-		void logical_expr();
-		void checkExpr();
-		
+		Node * expr();
+		Node * var_declaration();
+		Node * assign(bool semicol = true);
+		Node * value_expr();
+		Node * value_expr_wbr();
+		Node * for_expr();
+		Node * for_head();
+		Node * for_init();
+		Node * for_body();
+		Node * if_expr();
+		Node * if_head();
+		Node * if_condition();
+		Node * if_body();
+		Node * else_expr();
+		Node * else_head();
+		Node * else_body();
+		Node * value();
+		Node * logical_expr();
+
+		void checkExpr(Node * parent);
 		
 		void IgnoreWhitespaces();
-		void Match(std::string t);
+		std::string Match(std::string t);
 		void err(const std::string& message);
 
 		Lexer lex;
 
+		
+	
 	public:
 		Parser()
 		{
-			line = 0;
-			//currentToken = lexer.tokens.begin();
-			//endToken = lexer.tokens.end();
+			line = 0;	
+		}
+
+		~Parser()
+		{
+			
 			
 		}
 		
