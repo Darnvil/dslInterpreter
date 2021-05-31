@@ -4,27 +4,38 @@
 namespace interpreter
 {
 
-	void VarTable::AddVar(Token token, Var var)
+	void VarTable::AddVar(Token token, Var<int> var)
 	{
-		if (SeekVar(token) == nullptr)
-			Table.insert(std::pair<Token, Var>(token, var));
+		if (SeekIntVar(token) == nullptr)
+			intTable.insert(std::pair<Token, Var<int> >(token, var));
 	}
-	Var * VarTable::SeekVar(Token token)
+	
+	Var<int>* VarTable::SeekIntVar(Token token)
 	{
-		Var * found = &Table.find(token)->second;
-		for (VarTable * table = this; table->prev != nullptr; table = table->prev)
-		{
-			Var * found = &table->Table.find(token)->second;
-			if (found != nullptr)
-				return found;
-		}
+		Var<int> * found = nullptr;
+		if(intTable.find(token) != intTable.end())
+			found = &intTable.find(token)->second;
+		
+		if (found != nullptr)
+			return found;
+		
 		return nullptr;
 	}
-	void VarTable::ChangeVal(Token token, std::string val)
+	
+	void VarTable::ChangeIntVal(Token token, int val)
 	{
-		Var * found = SeekVar(token);
+		Var<int> * found = SeekIntVar(token);
 		if (found != nullptr)
 			found->value = val;
 	}
+
+	void VarTable::PrintTable()
+	{
+		for ( auto intVar : intTable)
+		{
+			std::cout << intVar.second.token.GetValue() << " = " << intVar.second.value << std::endl;
+		}
+	}
+
 	
 }

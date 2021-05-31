@@ -20,30 +20,37 @@ namespace interpreter
 	protected:
 		std::vector<Node*> childs;
 		
+		
 	public:
 		std::string  identifier;
+
+		Node * for_modifier_buffer;
+		
 		Node(const int l, const std::string& id)
 		{
 			line = l;
 			identifier = id;
-			
+			currentChildToRpn = 0;
 		}
-		~Node()
-		{
-			/*for (auto child : *childs) delete child;
-			delete[] childs;*/
-		}
+
+		int currentChildToRpn;
 		
 		void Print(Node * node, const int indent);
 		
 
 		void virtual PrintNode(Node * node, int indent);
-		
 
+		void concatChildsRPN();
+
+		;
 		void AddChild(Node * node);
+		std::vector<Node *> getChilds();
 
-		
+		void AddToRpn(Node * node);
 
+		void PrintRPN();
+
+		std::vector<Token> RPN;
 		
 	};
 
@@ -54,6 +61,10 @@ namespace interpreter
 		Leaf(const int l, const std::string& id, std::string val) : Node(l, id) { value = val; }
 
 		void PrintNode(Node * node, int indent) override;
+		std::string GetValue()
+		{
+			return value;
+		}
 
 		
 	};

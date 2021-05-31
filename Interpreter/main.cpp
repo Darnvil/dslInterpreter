@@ -6,6 +6,7 @@
 #include <fstream>
 #include "Lexer.h"
 #include "Parser.h"
+#include "StackMachine.h"
 
 
 int main(int argc, char * argv[])
@@ -38,6 +39,10 @@ int main(int argc, char * argv[])
 
 	interpreter::Parser parser;
 	parser.Parse(lexer);
+
+	interpreter::StackMachine vm(&parser);
+
+	vm.Evaluate();
 	
 	return 0;
 }

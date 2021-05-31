@@ -44,13 +44,13 @@ namespace interpreter
 		WS -> [\t\s]+
 	 */
 
-	
 	void Parser::lang()
 	{
 		Token tok = Token(Terminal("lang", ""), "lang");
 		node = new Node(0, "lang");
 		
 		checkExpr(node);
+		node->concatChildsRPN();
 		if(currentToken->GetTerminal().GetIdentifier() != "EOF")
 		{
 			err("Expected end of file, but met: " + currentToken->GetTerminal().GetIdentifier());
@@ -82,39 +82,70 @@ namespace interpreter
 		{
 			err("Unexpected token: " + currentToken->GetTerminal().GetIdentifier());
 		}
+		exprn->concatChildsRPN();
 		return exprn;
 	}
 
 	Node * Parser::assign(bool semicol)
 	{
+		std::vector<Token> buffer;
+		beginExprToken = currentToken;
+
+		tokenCount += 1;
+		
 		Node * assignn = new Node(line, "assign");
 		Node* var = new Leaf(line, Match("VAR"), currentToken->GetValue());
-		assignn->AddChild((Node*)var);
-		Node* assign_op = new Leaf(line, Match("ASSIGN_OP"), currentToken->GetValue());
-		assignn->AddChild((Node*)assign_op);
 		
-		assignn->AddChild(value_expr());
+		if((currentToken - 2)->GetValue() == "int")
+		{
+			table.AddVar(*(currentToken - 1), Var<int> {*(currentToken - 1)}); // Add a var to a varTable
+		}
+		
+		assignn->AddChild((Node*)var);
+		assignn->RPN.push_back(*(currentToken - 1));
+		Node* assign_op = new Leaf(line, Match("ASSIGN_OP"), currentToken->GetValue());
+		opStack.push(*(currentToken - 1));
+		assignn->AddChild((Node*)assign_op);
+
+		Node * value_expr_node = value_expr();
+		assignn->AddChild(value_expr_node);
+		assignn->concatChildsRPN();
+		
+		
 		if (semicol)
 		{
 			Leaf* semicolon = new Leaf(line, Match("SEMICOLON"), currentToken->GetValue());
 			assignn->AddChild((Node *)semicolon);
 		}
+
+		assignn->RPN.push_back(opStack.top());
+		opStack.pop();
+		
 		return assignn;
 	}
 
-	Node * Parser::value_expr()
+	Node * Parser::value_expr(bool internal)
 	{
+		if(beginExprToken == endToken)
+		{
+			beginExprToken = currentToken;
+		}
+		
 		Node* value_exprn = new Node(line, "value_expr");
+		
 		auto firstSet = firstSets.at("value_expr");
-		IgnoreWhitespaces();
+		//IgnoreWhitespaces();
 		const std::string id = *std::find(firstSet.begin(), firstSet.end(), currentToken->GetTerminal().GetIdentifier());
+		
 		if(id == "L_BR")
 		{
 			value_exprn->AddChild(value_expr_wbr());
+			value_exprn->concatChildsRPN();
 		}
 		else if(id == "VAR" || id == "NUMBER")
 		{
 			value_exprn->AddChild(value());
+			value_exprn->concatChildsRPN();
 		}
 		else
 		{
@@ -124,19 +155,37 @@ namespace interpreter
 		{
 			Leaf* op = new Leaf(line, Match("OP"), currentToken->GetValue());
 			value_exprn->AddChild((Node *)op);
+			opStack.push(*(currentToken - 1));
 			value_exprn->AddChild(value_expr());
+			value_exprn->concatChildsRPN();
+			value_exprn->RPN.push_back(opStack.top());
+			opStack.pop();
 		}
+		
+			
 		return value_exprn;
 	}
 
-	Node * Parser::value_expr_wbr()
+	Node * Parser::value_expr_wbr(bool internal)
 	{
 		Node * val_expr_wbr = new Node(line, "value_expr_wbr");
 		Leaf* l_br = new Leaf(line, Match("L_BR"), currentToken->GetValue());
 		val_expr_wbr->AddChild((Node *)l_br);
+		opStack.push(*(currentToken - 1));
 		val_expr_wbr->AddChild(value_expr());
+		val_expr_wbr->concatChildsRPN();
 		Leaf* r_br = new Leaf(line, Match("R_BR"), currentToken->GetValue());
 		val_expr_wbr->AddChild((Node *)r_br);
+		while(true)
+		{
+			if(opStack.top().GetTerminal().GetIdentifier() == "L_BR")
+			{
+				opStack.pop();
+				break;
+			}
+			val_expr_wbr->RPN.push_back(opStack.top());
+			opStack.pop();
+		}
 		return val_expr_wbr;		
 	}
 
@@ -147,12 +196,14 @@ namespace interpreter
 		{
 			Leaf* number = new Leaf(line, Match("NUMBER"), currentToken->GetValue());
 			value->AddChild((Node *)number);
+			value->RPN.push_back(*(currentToken - 1));
 			return value;
 		}
 		catch (std::exception e)
 		{
 			Leaf* var = new Leaf(line, Match("VAR"), currentToken->GetValue());
 			value->AddChild((Node *)var);
+			value->RPN.push_back(*(currentToken - 1));
 			return value;
 		}
 	}
@@ -163,14 +214,26 @@ namespace interpreter
 		Node * var_declarationn = new Node(line, "var_declaration");
 		Leaf* type = new Leaf(line, Match("TYPE"), currentToken->GetValue());
 		var_declarationn->AddChild((Node *)type);
-		if((currentToken + 2)->GetTerminal().GetIdentifier() == "ASSIGN_OP")
+
+		
+		
+
+		//IgnoreWhitespaces();
+		if((currentToken + 1)->GetTerminal().GetIdentifier() == "ASSIGN_OP")
 		{
 			var_declarationn->AddChild(assign());
+			var_declarationn->concatChildsRPN();
+			
 		}
 		else
 		{
 			Leaf * var = new Leaf(line, Match("VAR"), currentToken->GetValue());
 			var_declarationn->AddChild((Node *)var);
+			if((currentToken - 2)->GetValue() == "int")
+			{
+				table.AddVar(*(currentToken - 1), Var<int> {*(currentToken - 1)}); // Add a var to a varTable
+			}
+			var_declarationn->RPN.push_back(*(currentToken - 1));
 			Leaf * semicolon = new Leaf(line, Match("SEMICOLON"), currentToken->GetValue());
 			var_declarationn->AddChild((Node *)semicolon);
 		}
@@ -182,7 +245,15 @@ namespace interpreter
 		Node * for_exprn = new Node(line, "for_expr");
 		
 		for_exprn->AddChild(for_head());
+		for_exprn->for_modifier_buffer = for_exprn->getChilds()[0]->for_modifier_buffer;
+		
 		for_exprn->AddChild(for_body());
+		for_exprn->concatChildsRPN();
+		if(for_exprn->for_modifier_buffer != nullptr)
+			for_exprn->AddToRpn(for_exprn->for_modifier_buffer);
+		for_exprn->RPN.push_back(Token(Terminal("FOR_GOTO_COND", ""), "COND" + std::to_string(COND_ID++) + " !"));
+		for_exprn->RPN.push_back(Token(Terminal("FOR_GOTO_END", ""), "END" + std::to_string(END_ID++)));
+		
 		
 		return for_exprn;
 	}
@@ -198,6 +269,10 @@ namespace interpreter
 		for_headn->AddChild((Node *)l_br);
 		
 		for_headn->AddChild(for_init());
+		for_headn->for_modifier_buffer = for_headn->getChilds()[2]->for_modifier_buffer;
+		for_headn->concatChildsRPN();
+		for_headn->RPN.push_back(Token(Terminal("FOR_GOTO", ""), "END" + std::to_string(END_ID) + " !F"));
+		
 		
 		Leaf* r_br = new Leaf(line, Match("R_BR"), currentToken->GetValue());
 		for_headn->AddChild((Node *)r_br);
@@ -221,11 +296,18 @@ namespace interpreter
 		{
 			for_initn->AddChild(value_expr());
 		}
-		
 
+		for_initn->concatChildsRPN();
+
+		for_initn->RPN.push_back(Token(Terminal("FOR_COND_END", ""), "COND" + std::to_string(COND_ID)));
+		
 		if(currentToken->GetTerminal().GetIdentifier() != "SEMICOLON")
 		{
-			for_initn->AddChild(logical_expr());
+			auto logical_exprn = logical_expr();
+			for_initn->AddChild(logical_exprn);
+			for_initn->concatChildsRPN();
+			
+			
 		}
 		Leaf* semicolon = new Leaf(line, Match("SEMICOLON"), currentToken->GetValue());
 		for_initn->AddChild((Node *)semicolon);
@@ -234,7 +316,9 @@ namespace interpreter
 		{
 			return for_initn;
 		}
-		for_initn->AddChild(assign(false));
+		auto assignn = assign(false);
+		for_initn->AddChild(assignn);
+		for_initn->for_modifier_buffer = assignn;
 		
 		return for_initn;
 	}
@@ -247,9 +331,11 @@ namespace interpreter
 		for_bodyn->AddChild((Node *)l_s_br);
 		
 		checkExpr(for_bodyn);
+		for_bodyn->concatChildsRPN();
 		
 		Leaf* r_s_br = new Leaf(line, Match("R_S_BR"), currentToken->GetValue());
 		for_bodyn->AddChild((Node *)r_s_br);
+		
 		
 		return for_bodyn;
 	}
@@ -259,11 +345,26 @@ namespace interpreter
 		Node * if_exprn = new Node(line, "if_expr");
 		
 		if_exprn->AddChild(if_head());
+		if_exprn->concatChildsRPN();
+		if_exprn->RPN.push_back(Token(Terminal("IF_GOTO", ""), "END" + std::to_string(END_ID) + " !F"));
+		
 		if_exprn->AddChild(if_body());
+		if_exprn->concatChildsRPN();
+
+		
+		
+		
 		
 		if (currentToken->GetTerminal().GetIdentifier() == "ELSE_KW")
 		{
+			if_exprn->RPN.push_back(Token(Terminal("ELSE_GOTO", ""), "GO" + std::to_string(GO_ID) + " !"));
+			if_exprn->RPN.push_back(Token(Terminal("IF_GOTO_END", ""), "END" + std::to_string(END_ID++)));
 			if_exprn->AddChild(else_expr());
+			if_exprn->concatChildsRPN();
+		}
+		else
+		{
+			if_exprn->RPN.push_back(Token(Terminal("IF_GOTO_END", ""), "END" + std::to_string(END_ID++)));
 		}
 		
 		return if_exprn;
@@ -278,7 +379,8 @@ namespace interpreter
 		if_headn->AddChild((Node *)if_kw);
 		
 		if_headn->AddChild(if_condition());
-
+		if_headn->concatChildsRPN();
+		
 		return if_headn;
 	}
 
@@ -290,6 +392,7 @@ namespace interpreter
 		if_conditionn->AddChild((Node *)l_br);
 		
 		if_conditionn->AddChild(logical_expr());
+		if_conditionn->concatChildsRPN();
 		
 		Leaf* r_br = new Leaf(line, Match("R_BR"), currentToken->GetValue());
 		if_conditionn->AddChild((Node *)r_br);
@@ -305,10 +408,13 @@ namespace interpreter
 		if_bodyn->AddChild((Node *)l_s_br);
 		
 		checkExpr(if_bodyn);
-
+		if_bodyn->concatChildsRPN();
+		
 		Leaf* r_s_br = new Leaf(line, Match("R_S_BR"), currentToken->GetValue());
 		if_bodyn->AddChild((Node *)r_s_br);
 
+		
+		
 		return if_bodyn;
 	}
 
@@ -318,6 +424,10 @@ namespace interpreter
 		
 		else_exprn->AddChild(else_head());
 		else_exprn->AddChild(else_body());
+
+		else_exprn->concatChildsRPN();
+
+		else_exprn->RPN.push_back(Token(Terminal("ELSE_GOTO_END", ""), "GO" + std::to_string(GO_ID++)));
 		
 		return else_exprn;
 	}
@@ -340,6 +450,7 @@ namespace interpreter
 		else_bodyn->AddChild((Node *)l_s_br);
 		
 		checkExpr(else_bodyn);
+		else_bodyn->concatChildsRPN();
 		
 		Leaf* r_s_br = new Leaf(line, Match("R_S_BR"), currentToken->GetValue());
 		else_bodyn->AddChild((Node *)r_s_br);
@@ -352,12 +463,18 @@ namespace interpreter
 		Node * logical_exprn = new Node(line, "logical_expr");
 		
 		logical_exprn->AddChild(value_expr());
+		logical_exprn->concatChildsRPN();
 		
 		Leaf* logical_op = new Leaf(line, Match("LOGICAL_OP"), currentToken->GetValue());
 		logical_exprn->AddChild((Node *)logical_op);
+		opStack.push(*(currentToken - 1));
 		
 		logical_exprn->AddChild(value_expr());
+		logical_exprn->concatChildsRPN();
 
+		logical_exprn->RPN.push_back(opStack.top());
+		opStack.pop();
+		
 		return logical_exprn;
 	}
 
@@ -368,31 +485,46 @@ namespace interpreter
 		std::vector<std::string> firstSet = firstSets.at("expr");
 		do
 		{
+			
 			parent->AddChild(expr());
+			
 		} while (std::find(firstSet.begin(), firstSet.end(), currentToken->GetTerminal().GetIdentifier()) != firstSet.end());
+	}
+
+	
+	void Parser::ToOutputRPN()
+	{
+		std::vector<Token> outputLine;
+		
+		
 	}
 	
 	std::string Parser::Match(std::string t)
 	{
-		IgnoreWhitespaces();
+		//IgnoreWhitespaces();
 		
 		if((currentToken++)->GetTerminal().GetIdentifier() == t)
 		{
-			IgnoreWhitespaces();
+			//IgnoreWhitespaces();
 			return t;
 		}
 		--currentToken;
 		err("Unexpected token: " + currentToken->GetTerminal().GetIdentifier());
 	}
 
-	void Parser::IgnoreWhitespaces()
+	std::vector<Token> Parser::IgnoreWhitespaces()
 	{
-		while (currentToken->GetTerminal().GetIdentifier() == "WS") ++currentToken;
-		while (currentToken->GetTerminal().GetIdentifier() == "NLINE")
+		auto it = currentToken;
+		std::vector<Token> newTokens;
+		for(; it != endToken; ++it)
 		{
-			++currentToken;
-			++line;
+			if (it->GetTerminal().GetIdentifier() != "WS")
+			{
+				newTokens.push_back(*it);
+			}
 		}
+
+		return newTokens;
 	}
 
 	void Parser::err(const std::string &message)
@@ -406,10 +538,19 @@ namespace interpreter
 		{
 			currentToken = lexer.tokens.begin();
 			endToken = lexer.tokens.end();
+
+			auto tokens = IgnoreWhitespaces();
+
+			currentToken = tokens.begin();
+			endToken = tokens.end();
 			
 			lang();
 			std::cout << "Parser: success\n";
 			node->Print(node, 0);
+
+			std::cout << "\nRPN: \n\n";
+
+			node->PrintRPN();
 		}
 		catch (std::exception exc)
 		{

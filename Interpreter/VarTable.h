@@ -9,42 +9,35 @@
 namespace interpreter
 {
 	
-
+	template <class T>
 	class Var
 	{
 	public:
 		Token token;
-		std::string value;
-		Token type;
+		T value;
+		
 
-		Var(Token tok, std::string val, Token ty)
-			: token(tok), value(val), type(ty)  {}
+		Var(Token tok, T val)
+			: token(tok), value(val)   {}
 
-		Var(Token tok, Token ty)
-			: token(tok), value(""), type(ty)  {}
+		Var(Token tok)
+			: token(tok)   {}
 	};
 	
 	class VarTable
 	{
 	private:
-		VarTable * prev;
 		
-		std::map < Token, Var > Table;
+		
+		std::map < Token, Var<int> > intTable;
 	public:
-		VarTable()
-		{
-			prev = nullptr;
-		}
-
-		VarTable(VarTable * pr)
-		{
-			prev = pr;
-		}
-
-		void AddVar(Token token, Var var);
-		Var * SeekVar(Token token);
-		void ChangeVal(Token token, std::string val);
 		
+		
+
+		void AddVar(Token token, Var<int> var);
+		Var<int> * SeekIntVar(Token token);
+		void ChangeIntVal(Token token, int val);
+		void PrintTable();
 
 		
 	};

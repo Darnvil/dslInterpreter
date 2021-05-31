@@ -143,6 +143,8 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Node.cpp" />
     <ClCompile Include="Parser.cpp" />
+    <ClCompile Include="RPN.cpp" />
+    <ClCompile Include="StackMachine.cpp" />
     <ClCompile Include="Terminal.cpp" />
     <ClCompile Include="Token.cpp" />
     <ClCompile Include="VarTable.cpp" />
@@ -151,6 +153,8 @@
     <ClInclude Include="Lexer.h" />
     <ClInclude Include="Node.h" />
     <ClInclude Include="Parser.h" />
+    <ClInclude Include="RPN.h" />
+    <ClInclude Include="StackMachine.h" />
     <ClInclude Include="Terminal.h" />
     <ClInclude Include="Token.h" />
     <ClInclude Include="VarTable.h" />

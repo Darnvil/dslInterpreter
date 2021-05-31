@@ -26,6 +26,8 @@ namespace interpreter
         {
             return this->value < rhs.value;
         }
+
+        //bool operator==(const Token& token);
     	
         Terminal GetTerminal();
         std::string GetValue();
